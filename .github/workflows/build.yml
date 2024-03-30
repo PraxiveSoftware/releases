@@ -17,7 +17,7 @@ jobs:
             node-version: 18
         - name: Install Yarn
           run: npm install -g yarn@1.22.22
-        - name: Build ${{ matrix.os }}
+        - name: Build ${{ matrix.os}}
           run: node cmd/${{ matrix.os }}/build.js
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
