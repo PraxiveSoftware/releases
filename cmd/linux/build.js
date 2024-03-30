@@ -36,7 +36,7 @@ const buildBrowser = () => {
 };
 
 const createInstallers = async () => {
-    await exec("yarn compile-windows", { cwd: browserFolder });
+    await exec("yarn compile-linux", { cwd: browserFolder });
 
     const packageJson = JSON.parse(fs.readFileSync(path.join(browserFolder, 'package.json'), 'utf8'));
     const version = packageJson.version;
@@ -71,11 +71,11 @@ const createRelease = async () => {
 
 const main = async () => {
     await downloadRepo();
-    console.log("Downloaded the browser repo. Building the browser now for Windows.");
+    console.log("Downloaded the browser repo. Building the browser now for Linux.");
     await buildBrowser();
-    console.log("Built the browser for Windows. Creating the installer now.");
+    console.log("Built the browser for Linux. Creating the installer now.");
     await createInstallers();
-    console.log("Created the installers for Windows. Creating new release now.");
+    console.log("Created the installers for Linux. Creating new release now.");
     const releaseId = await createRelease();
     console.log(`Created the release with id ${releaseId}. Uploading files to the release now.`);
     const versionFolder = path.join(browserFolder, 'version', currentVersion);
