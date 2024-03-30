@@ -8,7 +8,7 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
 const browserBranch = "main";
-const browserFolder = path.resolve(__dirname, "..", "browser");
+const browserFolder = path.resolve(__dirname, "browser");
 let currentVersion = "v1.0.0";
 
 const downloadRepo = async () => {
