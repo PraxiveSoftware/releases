@@ -20,4 +20,4 @@ jobs:
         - name: Build ${{ matrix.os}}
           run: node cmd/${{ matrix.os }}/build.js
           env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+            GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
