@@ -1,0 +1,14 @@
+{
+  "name": "releases",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "repository": "https://github.com/PraxiveSoftware/releases.git",
+  "author": "ThePraxiveSoftware",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "child_process": "^1.0.2",
+    "dotenv": "^16.4.5",
+    "octokit": "^3.1.2"
+  }
+}
