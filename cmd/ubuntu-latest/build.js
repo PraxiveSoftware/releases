@@ -75,7 +75,7 @@ const buildBrowser = () => {
 
 const createInstallers = async () => {
     return new Promise((resolve, reject) => {
-        exec("yarn compile-linux", { cwd: browserFolder }, async (error) => {
+        exec(`cd ${browserFolder} && yarn compile-linux`, { cwd: browserFolder }, async (error) => {
             if (error) {
                 console.error(`Error during compile: ${error}`);
                 reject(error);
