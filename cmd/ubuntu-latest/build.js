@@ -77,7 +77,7 @@ const createInstallers = async () => {
     return new Promise((resolve, reject) => {
         exec("yarn compile-linux", { cwd: browserFolder }, async (error) => {
             if (error) {
-                console.error(`Error during compile: ${error.stack}`);
+                console.error(`Error during compile: ${error}`);
                 reject(error);
             } else {
                 const packageJson = JSON.parse(fs.readFileSync(path.join(browserFolder, 'package.json'), 'utf8'));
