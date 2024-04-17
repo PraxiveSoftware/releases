@@ -132,7 +132,7 @@ const main = async () => {
     await downloadRepo(sha);
     console.log("Downloaded the browser source code.");
     await buildBrowser();
-    console.log("Built the browser.");
+    console.log("Installed dependencies and built the browser.");
     console.log("Creating the installers now...");
     await createInstallers();
     console.log("Created the installers.");
@@ -155,7 +155,7 @@ const main = async () => {
     }
 
     console.log("Uploading files to the release now.");
-    const versionFolder = path.join(browserFolder, 'dists', 'nsis-web');
+    const versionFolder = path.join(browserFolder, 'dist', 'nsis-web');
     const files = fs.readdirSync(versionFolder).filter(file => path.extname(file) !== '.yml');
     for (const file of files) {
         const filePath = path.join(versionFolder, file);
