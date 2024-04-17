@@ -41,7 +41,7 @@ const downloadRepo = async () => {
                 fs.writeFileSync(filePath, Buffer.from(content, "base64"));
             } catch (error) {
                 if (error.status === 404) {
-                    console.warn(`Warning: Could not find blob for file ${item.path}. It may have been deleted or moved.`);
+                    console.warn(`Warning: File ${item.path} is a directory. Already downloaded, skipping...`);
                 } else {
                     throw error;
                 }
