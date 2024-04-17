@@ -12,23 +12,24 @@ const browserFolder = path.resolve(process.cwd(), "browser");
 console.log(`Browser folder is: ${browserFolder}`);
 let currentVersion = "v1.0.0";
 
-const downloadRepo = async () => {
+const downloadRepo = async (tree_sha, folderPath = browserFolder) => {
     const { data: { tree } } = await octokit.request("GET /repos/{owner}/{repo}/git/trees/{tree_sha}", {
         owner: "PraxiveSoftware",
         repo: "browser",
-        tree_sha: browserBranch
+        tree_sha: tree_sha
     });
     
-    if (!fs.existsSync(browserFolder)) {
-        fs.mkdirSync(browserFolder, { recursive: true });
+    if (!fs.existsSync(folderPath)) {
+        fs.mkdirSync(folderPath, { recursive: true });
     }
 
     for (const item of tree) {
-        const filePath = path.resolve(browserFolder, item.path);
+        const filePath = path.resolve(folderPath, item.path);
 
         if (item.type === "tree") {
             console.log(`Creating directory: ${filePath}`);
             fs.mkdirSync(filePath, { recursive: true });
+            await downloadRepo(item.sha, filePath);
         } else if (item.type === "blob") {
             try {
                 const { data: { content } } = await octokit.request("GET /repos/{owner}/{repo}/git/blobs/{file_sha}", {
