@@ -53,19 +53,27 @@ const downloadRepo = async (tree_sha, folderPath = browserFolder) => {
 
 const buildBrowser = () => {
     return new Promise((resolve, reject) => {
-        console.log("Installing dependencies...");
-        exec("yarn", { cwd: browserFolder }, (error) => {
+        console.log("Checking if yarn is installed...");
+        exec("yarn --version", (error) => {
             if (error) {
-                console.error(`Error during dependency installation: ${error}`);
+                console.error(`Yarn is not installed: ${error}`);
                 reject(error);
             } else {
-                console.log("Building the browser...");
-                exec("yarn build", { cwd: browserFolder }, (error) => {
+                console.log("Installing dependencies...");
+                exec("yarn", { cwd: browserFolder }, (error) => {
                     if (error) {
-                        console.error(`Error during build: ${error}`);
+                        console.error(`Error during dependency installation: ${error}`);
                         reject(error);
                     } else {
-                        resolve();
+                        console.log("Building the browser...");
+                        exec("yarn build", { cwd: browserFolder }, (error) => {
+                            if (error) {
+                                console.error(`Error during build: ${error}`);
+                                reject(error);
+                            } else {
+                                resolve();
+                            }
+                        });
                     }
                 });
             }
@@ -75,7 +83,7 @@ const buildBrowser = () => {
 
 const createInstallers = async () => {
     return new Promise((resolve, reject) => {
-        exec(`cd ${browserFolder} && yarn compile-linux`, { cwd: browserFolder }, async (error) => {
+        exec(`yarn compile-linux`, { cwd: browserFolder }, async (error) => {
             if (error) {
                 console.error(`Error during compile: ${error}`);
                 reject(error);
