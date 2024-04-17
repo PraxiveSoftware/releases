@@ -113,44 +113,15 @@ const createInstallers = async () => {
     });
 };
 
-const createTag = async (commitSha) => {
-    const { data: tag } = await octokit.git.createTag({
-        owner: "PraxiveSoftware",
-        repo: "releases",
-        tag: currentVersion,
-        message: `${currentVersion}`,
-        object: commitSha,
-        type: 'commit',
-        tagger: {
-            name: 'Jonas Franke',
-            email: 'jonasfranke@sdevs.org',
-            date: new Date().toISOString()
-        }
-    });
-
-    const { data: { ref } } = await octokit.git.createRef({
-        owner: "PraxiveSoftware",
-        repo: "releases",
-        ref: `refs/tags/${currentVersion}`,
-        sha: tag.sha
-    });
-
-    console.log(`Created tag ${currentVersion}.`);
-    return ref;
-}
-
-const createRelease = async (commitSha) => {
-    const tag = await createTag(commitSha);
-
+const createRelease = async () => {
     const { data: { id } } = await octokit.request("POST /repos/{owner}/{repo}/releases", {
         owner: "PraxiveSoftware",
         repo: "releases",
-        tag_name: tag,
+        tag_name: currentVersion,
         name: currentVersion,
         prerelease: true
     });
 
-    console.log(`Created the release with id ${id}.`);
     return id;
 }
 
@@ -181,7 +152,7 @@ const main = async () => {
         releaseId = existingRelease.id;
     } else {
         console.log(`Release with tag ${currentVersion} does not exist. Creating new release.`);
-        releaseId = await createRelease(sha);
+        releaseId = await createRelease();
         console.log(`Created the release with id ${releaseId}.`);
     }
 
