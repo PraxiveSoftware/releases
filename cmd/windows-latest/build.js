@@ -52,29 +52,51 @@ const downloadRepo = async (tree_sha, folderPath = browserFolder) => {
 };
 
 const buildBrowser = () => {
-    return exec("yarn build", { cwd: browserFolder });
+    return new Promise((resolve, reject) => {
+        exec("yarn build", { cwd: browserFolder }, (error) => {
+            if (error) {
+                console.error(`Error during build: ${error}`);
+                reject(error);
+            } else {
+                resolve();
+            }
+        });
+    });
 };
 
 const createInstallers = async () => {
-    await exec("yarn compile-windows", { cwd: browserFolder });
+    return new Promise((resolve, reject) => {
+        exec("yarn compile-windows", { cwd: browserFolder }, async (error) => {
+            if (error) {
+                console.error(`Error during compile: ${error}`);
+                reject(error);
+            } else {
+                const packageJson = JSON.parse(fs.readFileSync(path.join(browserFolder, 'package.json'), 'utf8'));
+                const version = packageJson.version;
+                currentVersion = version;
 
-    const packageJson = JSON.parse(fs.readFileSync(path.join(browserFolder, 'package.json'), 'utf8'));
-    const version = packageJson.version;
-    currentVersion = version;
+                const versionFolder = path.join(browserFolder, 'version', version);
+                if (!fs.existsSync(versionFolder)) {
+                    fs.mkdirSync(versionFolder, { recursive: true });
+                }
 
-    const versionFolder = path.join(browserFolder, 'version', version);
-    if (!fs.existsSync(versionFolder)) {
-        fs.mkdirSync(versionFolder, { recursive: true });
-    }
-
-    const nsisWebFolder = path.join(browserFolder, 'dist', 'nsis-web');
-    const files = fs.readdirSync(nsisWebFolder);
-    for (const file of files) {
-        if (path.extname(file) !== '.yml') {
-            const content = fs.readFileSync(path.join(nsisWebFolder, file));
-            fs.writeFileSync(path.join(versionFolder, file), content);
-        }
-    }
+                const nsisWebFolder = path.join(browserFolder, 'dist', 'nsis-web');
+                if (!fs.existsSync(nsisWebFolder)) {
+                    console.error(`Error: ${nsisWebFolder} does not exist. The compile step may have failed or it may not have created this directory as expected.`);
+                    reject(new Error(`Directory not found: ${nsisWebFolder}`));
+                } else {
+                    const files = fs.readdirSync(nsisWebFolder);
+                    for (const file of files) {
+                        if (path.extname(file) !== '.yml') {
+                            const content = fs.readFileSync(path.join(nsisWebFolder, file));
+                            fs.writeFileSync(path.join(versionFolder, file), content);
+                        }
+                    }
+                    resolve();
+                }
+            }
+        });
+    });
 };
 
 const createRelease = async () => {
@@ -101,9 +123,25 @@ const main = async () => {
     await buildBrowser();
     console.log("Built the browser for Windows. Creating the installer now.");
     await createInstallers();
-    console.log("Created the installers for Windows. Creating new release now.");
-    const releaseId = await createRelease();
-    console.log(`Created the release with id ${releaseId}. Uploading files to the release now.`);
+    console.log("Created the installers for Windows. Checking if release already exists.");
+
+    const { data: releases } = await octokit.request("GET /repos/{owner}/{repo}/releases", {
+        owner: "PraxiveSoftware",
+        repo: "browser"
+    });
+
+    let releaseId;
+    const existingRelease = releases.find(release => release.tag_name === currentVersion);
+    if (existingRelease) {
+        console.log(`Release with tag ${currentVersion} already exists. Using existing release.`);
+        releaseId = existingRelease.id;
+    } else {
+        console.log(`Release with tag ${currentVersion} does not exist. Creating new release.`);
+        releaseId = await createRelease();
+        console.log(`Created the release with id ${releaseId}.`);
+    }
+
+    console.log("Uploading files to the release now.");
     const versionFolder = path.join(browserFolder, 'version', currentVersion);
     const files = fs.readdirSync(versionFolder);
     for (const file of files) {
