@@ -9,6 +9,7 @@ const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
 const browserBranch = "main";
 const browserFolder = path.resolve(process.cwd(), "browser");
+console.log(`Browser folder is: ${browserFolder}`);
 let currentVersion = "v1.0.0";
 
 const downloadRepo = async () => {
@@ -19,15 +20,15 @@ const downloadRepo = async () => {
     });
     
     for (const item of tree) {
-        if (item.type === "blob") {
-            const { data: { content } } = await octokit.request("GET /repos/{owner}/{repo}/git/blobs/{file_sha}", {
-                owner: "PraxiveSoftware",
-                repo: "browser",
-                file_sha: item.sha
-            });
-    
-            fs.writeFileSync(path.resolve(browserFolder, item.path), Buffer.from(content, "base64"));
-        }
+        const { data: { content } } = await octokit.request("GET /repos/{owner}/{repo}/git/blobs/{file_sha}", {
+            owner: "PraxiveSoftware",
+            repo: "browser",
+            file_sha: item.sha
+        });
+
+        const filePath = path.resolve(browserFolder, item.path);
+        console.log(`Writing file: ${filePath}`);
+        fs.writeFileSync(filePath, Buffer.from(content, "base64"));
     }
 };
 
