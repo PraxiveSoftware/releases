@@ -24,21 +24,27 @@ const downloadRepo = async () => {
     }
 
     for (const item of tree) {
-        try {
-            const { data: { content } } = await octokit.request("GET /repos/{owner}/{repo}/git/blobs/{file_sha}", {
-                owner: "PraxiveSoftware",
-                repo: "browser",
-                file_sha: item.sha
-            });
+        const filePath = path.resolve(browserFolder, item.path);
 
-            const filePath = path.resolve(browserFolder, item.path);
-            console.log(`Writing file: ${filePath}`);
-            fs.writeFileSync(filePath, Buffer.from(content, "base64"));
-        } catch (error) {
-            if (error.status === 404) {
-                console.warn(`Warning: Could not find blob for file ${item.path}. It may have been deleted or moved.`);
-            } else {
-                throw error;
+        if (item.type === "tree") {
+            console.log(`Creating directory: ${filePath}`);
+            fs.mkdirSync(filePath, { recursive: true });
+        } else if (item.type === "blob") {
+            try {
+                const { data: { content } } = await octokit.request("GET /repos/{owner}/{repo}/git/blobs/{file_sha}", {
+                    owner: "PraxiveSoftware",
+                    repo: "browser",
+                    file_sha: item.sha
+                });
+
+                console.log(`Writing file: ${filePath}`);
+                fs.writeFileSync(filePath, Buffer.from(content, "base64"));
+            } catch (error) {
+                if (error.status === 404) {
+                    console.warn(`Warning: Could not find blob for file ${item.path}. It may have been deleted or moved.`);
+                } else {
+                    throw error;
+                }
             }
         }
     }
