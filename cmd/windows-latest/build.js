@@ -110,11 +110,24 @@ const createInstallers = async () => {
     });
 };
 
-const createRelease = async () => {
+const createTag = async (commitSha) => {
+    const { data: { ref } } = await octokit.git.createRef({
+        owner: "PraxiveSoftware",
+        repo: "releases",
+        ref: `refs/tags/${currentVersion}`,
+        sha: commitSha
+    });
+
+    return ref;
+}
+
+const createRelease = async (commitSha) => {
+    const tag = await createTag(commitSha);
+
     const { data: { id } } = await octokit.request("POST /repos/{owner}/{repo}/releases", {
         owner: "PraxiveSoftware",
-        repo: "browser",
-        tag_name: currentVersion,
+        repo: "releases",
+        tag_name: tag,
         name: currentVersion,
         prerelease: true
     });
@@ -138,7 +151,7 @@ const main = async () => {
 
     const { data: releases } = await octokit.request("GET /repos/{owner}/{repo}/releases", {
         owner: "PraxiveSoftware",
-        repo: "browser"
+        repo: "releases"
     });
 
     let releaseId;
@@ -148,7 +161,7 @@ const main = async () => {
         releaseId = existingRelease.id;
     } else {
         console.log(`Release with tag ${currentVersion} does not exist. Creating new release.`);
-        releaseId = await createRelease();
+        releaseId = await createRelease(sha);
         console.log(`Created the release with id ${releaseId}.`);
     }
 
@@ -160,14 +173,14 @@ const main = async () => {
     }
 
     console.log("Uploading files to the release now.");
-    const versionFolder = path.join(browserFolder, 'version', currentVersion);
-    const files = fs.readdirSync(versionFolder);
+    const versionFolder = path.join(browserFolder, 'dists', 'nsis-web');
+    const files = fs.readdirSync(versionFolder).filter(file => path.extname(file) !== '.yml');
     for (const file of files) {
         const filePath = path.join(versionFolder, file);
         const content = fs.readFileSync(filePath);
         await octokit.request("POST /repos/{owner}/{repo}/releases/{release_id}/assets?name={name}", {
             owner: "PraxiveSoftware",
-            repo: "browser",
+            repo: "releases",
             release_id: releaseId,
             name: file,
             data: content
