@@ -65,7 +65,6 @@ const buildBrowser = () => {
                         console.error(`Error during build: ${error}`);
                         reject(error);
                     } else {
-                        console.log("Built the browser.");
                         resolve();
                     }
                 });
@@ -114,8 +113,8 @@ const createRelease = async () => {
     const { data: { id } } = await octokit.request("POST /repos/{owner}/{repo}/releases", {
         owner: "PraxiveSoftware",
         repo: "releases",
-        tag_name: currentVersion,
-        name: currentVersion,
+        tag_name: "v" + currentVersion,
+        name: "v" + currentVersion,
         prerelease: true
     });
 
@@ -132,7 +131,6 @@ const main = async () => {
     console.log(`Downloading the browser repo source code from sha ${sha}...`);
     await downloadRepo(sha);
     console.log("Downloaded the browser source code.");
-    console.log("Building the browser now...");
     await buildBrowser();
     console.log("Built the browser.");
     console.log("Creating the installers now...");
@@ -154,13 +152,6 @@ const main = async () => {
         console.log(`Release with tag ${currentVersion} does not exist. Creating new release.`);
         releaseId = await createRelease();
         console.log(`Created the release with id ${releaseId}.`);
-    }
-
-    if (!existingRelease) {
-        console.log(`Release with tag ${currentVersion} does not exist. Creating new release.`);
-        releaseId = await createRelease();
-        console.log(`Created the release with id ${releaseId}. Waiting for the release to be available...`);
-        await delay(5000)
     }
 
     console.log("Uploading files to the release now.");
