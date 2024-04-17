@@ -111,11 +111,25 @@ const createInstallers = async () => {
 };
 
 const createTag = async (commitSha) => {
+    const { data: tag } = await octokit.git.createTag({
+        owner: "PraxiveSoftware",
+        repo: "releases",
+        tag: currentVersion,
+        message: `${currentVersion}`,
+        object: commitSha,
+        type: 'commit',
+        tagger: {
+            name: 'Jonas Franke',
+            email: 'jonasfranke@sdevs.org',
+            date: new Date().toISOString()
+        }
+    });
+
     const { data: { ref } } = await octokit.git.createRef({
         owner: "PraxiveSoftware",
         repo: "releases",
         ref: `refs/tags/${currentVersion}`,
-        sha: commitSha
+        sha: tag.sha
     });
 
     return ref;
