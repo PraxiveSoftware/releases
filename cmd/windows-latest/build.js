@@ -53,12 +53,21 @@ const downloadRepo = async (tree_sha, folderPath = browserFolder) => {
 
 const buildBrowser = () => {
     return new Promise((resolve, reject) => {
-        exec("yarn build", { cwd: browserFolder }, (error) => {
+        console.log("Installing dependencies...");
+        exec("yarn", { cwd: browserFolder }, (error) => {
             if (error) {
-                console.error(`Error during build: ${error}`);
+                console.error(`Error during dependency installation: ${error}`);
                 reject(error);
             } else {
-                resolve();
+                console.log("Building the browser...");
+                exec("yarn build", { cwd: browserFolder }, (error) => {
+                    if (error) {
+                        console.error(`Error during build: ${error}`);
+                        reject(error);
+                    } else {
+                        resolve();
+                    }
+                });
             }
         });
     });
