@@ -12,6 +12,8 @@ const browserFolder = path.resolve(process.cwd(), "browser");
 console.log(`Browser folder is: ${browserFolder}`);
 let currentVersion = "v1.0.0";
 
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 const downloadRepo = async (tree_sha, folderPath = browserFolder) => {
     const { data: { tree } } = await octokit.request("GET /repos/{owner}/{repo}/git/trees/{tree_sha}", {
         owner: "PraxiveSoftware",
@@ -148,6 +150,13 @@ const main = async () => {
         console.log(`Release with tag ${currentVersion} does not exist. Creating new release.`);
         releaseId = await createRelease();
         console.log(`Created the release with id ${releaseId}.`);
+    }
+
+    if (!existingRelease) {
+        console.log(`Release with tag ${currentVersion} does not exist. Creating new release.`);
+        releaseId = await createRelease();
+        console.log(`Created the release with id ${releaseId}. Waiting for the release to be available...`);
+        await delay(5000)
     }
 
     console.log("Uploading files to the release now.");
