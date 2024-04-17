@@ -2,7 +2,7 @@ import "dotenv/config";
 import fs from 'node:fs';
 import path from 'node:path';
 import { exec } from 'node:child_process';
-import { Octokit } from "octokit";
+import { Octokit } from "@octokit/rest";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
@@ -158,16 +158,16 @@ const main = async () => {
     const versionFolder = path.join(browserFolder, 'dist', 'nsis-web');
     const files = fs.readdirSync(versionFolder).filter(file => path.extname(file) !== '.yml');
     for (const file of files) {
-    const filePath = path.join(versionFolder, file);
-    const content = fs.readFileSync(filePath);
-    await octokit.repos.uploadReleaseAsset({
-        owner: "PraxiveSoftware",
-        repo: "releases",
-        release_id: releaseId,
-        name: file,
-        data: content
-    });
-}
+        const filePath = path.join(versionFolder, file);
+        const content = fs.readFileSync(filePath);
+        await octokit.repos.uploadReleaseAsset({
+            owner: "PraxiveSoftware",
+            repo: "releases",
+            release_id: releaseId,
+            name: file,
+            data: content
+        });
+    }
 }
 
 main().catch(console.error);
