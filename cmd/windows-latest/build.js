@@ -49,8 +49,6 @@ const downloadRepo = async (tree_sha, folderPath = browserFolder) => {
             }
         }
     }
-
-    console.log(`Downloaded browser source code from tree ${tree_sha} to ${folderPath}.`);
 };
 
 const buildBrowser = () => {
