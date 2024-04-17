@@ -90,7 +90,13 @@ const createRelease = async () => {
 }
 
 const main = async () => {
-    await downloadRepo();
+    const { data: { object: { sha } } } = await octokit.request("GET /repos/{owner}/{repo}/git/refs/{ref}", {
+        owner: "PraxiveSoftware",
+        repo: "browser",
+        ref: `heads/${browserBranch}`
+    });
+
+    await downloadRepo(sha);
     console.log("Downloaded the browser repo. Building the browser now for Windows.");
     await buildBrowser();
     console.log("Built the browser for Windows. Creating the installer now.");
