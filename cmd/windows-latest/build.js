@@ -15,6 +15,7 @@ let currentVersion = "v1.0.0";
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const downloadRepo = async (tree_sha, folderPath = browserFolder) => {
+    console.log(`Downloading browser source code from tree ${tree_sha} to ${folderPath}...`);
     const { data: { tree } } = await octokit.request("GET /repos/{owner}/{repo}/git/trees/{tree_sha}", {
         owner: "PraxiveSoftware",
         repo: "browser",
@@ -29,7 +30,6 @@ const downloadRepo = async (tree_sha, folderPath = browserFolder) => {
         const filePath = path.resolve(folderPath, item.path);
 
         if (item.type === "tree") {
-            console.log(`Creating directory: ${filePath}`);
             fs.mkdirSync(filePath, { recursive: true });
             await downloadRepo(item.sha, filePath);
         } else if (item.type === "blob") {
@@ -40,7 +40,6 @@ const downloadRepo = async (tree_sha, folderPath = browserFolder) => {
                     file_sha: item.sha
                 });
 
-                console.log(`Writing file: ${filePath}`);
                 fs.writeFileSync(filePath, Buffer.from(content, "base64"));
             } catch (error) {
                 if (error.status === 404) {
@@ -51,6 +50,8 @@ const downloadRepo = async (tree_sha, folderPath = browserFolder) => {
             }
         }
     }
+
+    console.log(`Downloaded browser source code from tree ${tree_sha} to ${folderPath}.`);
 };
 
 const buildBrowser = () => {
@@ -67,6 +68,7 @@ const buildBrowser = () => {
                         console.error(`Error during build: ${error}`);
                         reject(error);
                     } else {
+                        console.log("Built the browser.");
                         resolve();
                     }
                 });
@@ -103,6 +105,7 @@ const createInstallers = async () => {
                             fs.writeFileSync(path.join(versionFolder, file), content);
                         }
                     }
+                    console.log("Created the installers for Windows.");
                     resolve();
                 }
             }
@@ -132,6 +135,7 @@ const createTag = async (commitSha) => {
         sha: tag.sha
     });
 
+    console.log(`Created tag ${currentVersion}.`);
     return ref;
 }
 
@@ -146,6 +150,7 @@ const createRelease = async (commitSha) => {
         prerelease: true
     });
 
+    console.log(`Created the release with id ${id}.`);
     return id;
 }
 
@@ -156,12 +161,13 @@ const main = async () => {
         ref: `heads/${browserBranch}`
     });
 
+    console.log(`Building the browser for commit ${sha}...`);
     await downloadRepo(sha);
-    console.log("Downloaded the browser repo. Building the browser now for Windows.");
+    console.log("Downloaded the browser source code. Building the browser now...");
     await buildBrowser();
-    console.log("Built the browser for Windows. Creating the installer now.");
+    console.log("Creating the installers now...");
     await createInstallers();
-    console.log("Created the installers for Windows. Checking if release already exists.");
+    console.log("Created the installers. Checking if the release already exists...");
 
     const { data: releases } = await octokit.request("GET /repos/{owner}/{repo}/releases", {
         owner: "PraxiveSoftware",
