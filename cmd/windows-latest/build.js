@@ -15,7 +15,6 @@ let currentVersion = "v1.0.0";
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const downloadRepo = async (tree_sha, folderPath = browserFolder) => {
-    console.log(`Downloading browser source code from tree ${tree_sha} to ${folderPath}...`);
     const { data: { tree } } = await octokit.request("GET /repos/{owner}/{repo}/git/trees/{tree_sha}", {
         owner: "PraxiveSoftware",
         repo: "browser",
@@ -132,13 +131,16 @@ const main = async () => {
         ref: `heads/${browserBranch}`
     });
 
-    console.log(`Building the browser for commit ${sha}...`);
+    console.log(`Downloading the browser repo source code from sha ${sha}...`);
     await downloadRepo(sha);
-    console.log("Downloaded the browser source code. Building the browser now...");
+    console.log("Downloaded the browser source code.");
+    console.log("Building the browser now...");
     await buildBrowser();
+    console.log("Built the browser.");
     console.log("Creating the installers now...");
     await createInstallers();
-    console.log("Created the installers. Checking if the release already exists...");
+    console.log("Created the installers.");
+    console.log("Checking if the release already exists...");
 
     const { data: releases } = await octokit.request("GET /repos/{owner}/{repo}/releases", {
         owner: "PraxiveSoftware",
