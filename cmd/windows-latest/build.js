@@ -19,6 +19,10 @@ const downloadRepo = async () => {
         tree_sha: browserBranch
     });
     
+    if (!fs.existsSync(browserFolder)) {
+        fs.mkdirSync(browserFolder, { recursive: true });
+    }
+
     for (const item of tree) {
         const { data: { content } } = await octokit.request("GET /repos/{owner}/{repo}/git/blobs/{file_sha}", {
             owner: "PraxiveSoftware",
