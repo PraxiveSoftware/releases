@@ -164,7 +164,7 @@ const main = async () => {
 
     console.log("Uploading files to the release now.");
     const versionFolder = path.join(browserFolder, 'dist', 'nsis-web');
-    const files = fs.readdirSync(versionFolder).filter(file => path.extname(file) !== '.yml');
+    const files = fs.readdirSync(versionFolder);
     for (const file of files) {
         const filePath = path.join(versionFolder, file);
         const content = fs.readFileSync(filePath);
