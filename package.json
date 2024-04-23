@@ -6,11 +6,18 @@
   "repository": "https://github.com/PraxiveSoftware/releases.git",
   "author": "ThePraxiveSoftware",
   "license": "Apache-2.0",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prettier": "prettier --write ."
+  },
   "dependencies": {
     "@octokit/rest": "^20.1.0",
     "child_process": "^1.0.2",
     "dotenv": "^16.4.5",
     "octokit": "^3.1.2",
     "rimraf": "^5.0.5"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5"
   }
 }
