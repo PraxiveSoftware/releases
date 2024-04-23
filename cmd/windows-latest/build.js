@@ -51,7 +51,7 @@ const downloadRepo = async (tree_sha, folderPath = browserFolder) => {
     }
 };
 
-const downloadMinorRepos = async (tree_sha, folderPath = browserFolder) => {
+const downloadMinorRepos = async (folderPath = browserFolder) => {
     const minors = ["domain-fetch", "pdf-viewer", "print-viewer"];
     const minorsPath = path.resolve(folderPath, "packages");
 
@@ -60,10 +60,16 @@ const downloadMinorRepos = async (tree_sha, folderPath = browserFolder) => {
     }
 
     for (const minor of minors) {
+        const { data: { object: { sha } } } = await octokit.request("GET /repos/{owner}/{repo}/git/refs/{ref}", {
+            owner: "PraxiveSoftware",
+            repo: minor,
+            ref: "heads/main"
+        });
+
         const { data: { tree } } = await octokit.request("GET /repos/{owner}/{repo}/git/trees/{tree_sha}", {
             owner: "PraxiveSoftware",
             repo: minor,
-            tree_sha: tree_sha
+            tree_sha: sha
         });
 
         const minorPath = path.resolve(minorsPath, minor);
@@ -180,7 +186,7 @@ const main = async () => {
     await downloadRepo(sha);
     console.log("Downloaded the browser source code.");
     console.log("Downloading the minor repos...");
-    await downloadMinorRepos(sha);
+    await downloadMinorRepos();
     console.log("Downloaded the minor repos.");
     await buildBrowser();
     console.log("Installed dependencies and built the browser.");
