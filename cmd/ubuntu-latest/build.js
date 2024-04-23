@@ -51,6 +51,44 @@ const downloadRepo = async (tree_sha, folderPath = browserFolder) => {
     }
 };
 
+const downloadRepoFuncMinors = async (tree_sha, folderPath = browserFolder, minor) => {
+    const { data: { tree } } = await octokit.request("GET /repos/{owner}/{repo}/git/trees/{tree_sha}", {
+        owner: "PraxiveSoftware",
+        repo: minor,
+        tree_sha: tree_sha
+    });
+
+    const minorPath = path.resolve(folderPath, "packages", minor);
+
+    if (!fs.existsSync(minorPath)) {
+        fs.mkdirSync(minorPath, { recursive: true });
+    }
+
+    for (const item of tree) {
+        const filePath = path.resolve(minorPath, item.path);
+
+        if (item.type === "tree") {
+            fs.mkdirSync(filePath, { recursive: true });
+        } else if (item.type === "blob") {
+            try {
+                const { data: { content } } = await octokit.request("GET /repos/{owner}/{repo}/git/blobs/{file_sha}", {
+                    owner: "PraxiveSoftware",
+                    repo: minor,
+                    file_sha: item.sha
+                });
+
+                fs.writeFileSync(filePath, Buffer.from(content, "base64"));
+            } catch (error) {
+                if (error.status === 404) {
+                    console.warn(`Warning: File ${item.path} is a directory. Already downloaded, skipping...`);
+                } else {
+                    throw error;
+                }
+            }
+        }
+    }
+};
+
 const downloadMinorRepos = async (folderPath = browserFolder) => {
     const minors = ["domain-fetch", "pdf-viewer", "print-viewer"];
     const minorsPath = path.resolve(folderPath, "packages");
@@ -83,7 +121,7 @@ const downloadMinorRepos = async (folderPath = browserFolder) => {
 
             if (item.type === "tree") {
                 fs.mkdirSync(filePath, { recursive: true });
-                await downloadRepo(item.sha, filePath);
+                await downloadRepoFuncMinors(item.sha, folderPath, minor);
             } else if (item.type === "blob") {
                 try {
                     const { data: { content } } = await octokit.request("GET /repos/{owner}/{repo}/git/blobs/{file_sha}", {
