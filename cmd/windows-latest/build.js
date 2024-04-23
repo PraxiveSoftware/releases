@@ -51,6 +51,54 @@ const downloadRepo = async (tree_sha, folderPath = browserFolder) => {
     }
 };
 
+const downloadMinorRepos = async (tree_sha, folderPath = browserFolder) => {
+    const minors = ["domain-fetch", "pdf-viewer", "print-viewer"];
+    const minorsPath = path.resolve(folderPath, "packages");
+
+    if (!fs.existsSync(minorsPath)) {
+        fs.mkdirSync(minorsPath, { recursive: true });
+    }
+
+    for (const minor of minors) {
+        const { data: { tree } } = await octokit.request("GET /repos/{owner}/{repo}/git/trees/{tree_sha}", {
+            owner: "PraxiveSoftware",
+            repo: minor,
+            tree_sha: tree_sha
+        });
+
+        const minorPath = path.resolve(minorsPath, minor);
+
+        if (!fs.existsSync(minorPath)) {
+            fs.mkdirSync(minorPath, { recursive: true });
+        }
+
+        for (const item of tree) {
+            const filePath = path.resolve(minorPath, item.path);
+
+            if (item.type === "tree") {
+                fs.mkdirSync(filePath, { recursive: true });
+                await downloadRepo(item.sha, filePath);
+            } else if (item.type === "blob") {
+                try {
+                    const { data: { content } } = await octokit.request("GET /repos/{owner}/{repo}/git/blobs/{file_sha}", {
+                        owner: "PraxiveSoftware",
+                        repo: minor,
+                        file_sha: item.sha
+                    });
+
+                    fs.writeFileSync(filePath, Buffer.from(content, "base64"));
+                } catch (error) {
+                    if (error.status === 404) {
+                        console.warn(`Warning: File ${item.path} is a directory. Already downloaded, skipping...`);
+                    } else {
+                        throw error;
+                    }
+                }
+            }
+        }
+    }
+};
+
 const buildBrowser = () => {
     return new Promise((resolve, reject) => {
         console.log("Installing dependencies...");
@@ -131,6 +179,9 @@ const main = async () => {
     console.log(`Downloading the browser repo source code from sha ${sha}...`);
     await downloadRepo(sha);
     console.log("Downloaded the browser source code.");
+    console.log("Downloading the minor repos...");
+    await downloadMinorRepos(sha);
+    console.log("Downloaded the minor repos.");
     await buildBrowser();
     console.log("Installed dependencies and built the browser.");
     console.log("Creating the installers now...");
